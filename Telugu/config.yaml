@@ -1,0 +1,74 @@
+language: telugu
+
+path:
+  parquet_dir: data/Telugu/IndicTTS_Telugu   # huggingface-cli download SPRINGLab/IndicTTS_Telugu
+  raw_dir: data/Telugu/raw                   # written by `preprocess.py extract`
+  corpus_dir: data/Telugu/mfa_corpus
+  lexicon: data/Telugu/lexicon.txt
+  mfa_model: data/Telugu/telugu_mfa.zip
+  textgrid_dir: data/Telugu/TextGrid
+  preprocessed_dir: data/Telugu/preprocessed
+  checkpoint_dir: Telugu/checkpoints
+  results_dir: Results/Telugu
+  vocoder: hifigan/generator_universal.pth.tar
+
+dataset:
+  name: IndicTTS-Telugu
+  # female has ~4.3 h and male ~4.5 h, so both are needed for 5 h train + 1 h val
+  speakers: [female, male]
+  min_duration: 1.0
+  max_duration: 15.0
+  train_hours: 5.0
+  val_hours: 1.0
+  seed: 1234
+
+audio:
+  sampling_rate: 22050     # originals are 48 kHz
+  n_fft: 1024
+  hop_length: 256
+  win_length: 1024
+  n_mels: 80
+  mel_fmin: 0
+  mel_fmax: 8000
+  f0_min: 60
+  f0_max: 500
+
+model:
+  max_seq_len: 1000
+  encoder_layers: 4
+  encoder_hidden: 256
+  encoder_heads: 2
+  decoder_layers: 6
+  decoder_hidden: 256
+  decoder_heads: 2
+  conv_filter_size: 1024
+  conv_kernel_size: [9, 1]
+  dropout: 0.2
+  variance_predictor:
+    filter_size: 256
+    kernel_size: 3
+    dropout: 0.5
+  n_bins: 256
+  postnet:
+    channels: 512
+    kernel_size: 5
+    layers: 5
+    dropout: 0.5
+
+train:
+  batch_size: 16
+  lr_scale: 1.0
+  warmup_steps: 4000
+  total_steps: 100000
+  grad_clip: 1.0
+  grad_acc_steps: 1
+  amp: true
+  num_workers: 2
+  log_step: 100
+  val_step: 1000
+  save_step: 5000
+  seed: 1234
+
+inference:
+  speaker: female
+  griffin_lim_iters: 60

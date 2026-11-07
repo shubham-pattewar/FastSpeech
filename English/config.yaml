@@ -1,0 +1,74 @@
+language: english
+
+path:
+  raw_dir: data/English/Svarah            # svarah_manifest.json + audio/
+  corpus_dir: data/English/mfa_corpus
+  lexicon: data/English/lexicon.txt
+  textgrid_dir: data/English/TextGrid
+  preprocessed_dir: data/English/preprocessed
+  checkpoint_dir: English/checkpoints
+  results_dir: Results/English
+  vocoder: hifigan/generator_universal.pth.tar
+
+dataset:
+  name: Svarah
+  manifest: svarah_manifest.json
+  # The manifest has no speaker field; the speaker is taken from the file name.
+  # Check this against your copy (preprocess prints the number of speakers found, should be ~117).
+  speaker_regex: "^(.+?)_"
+  min_duration: 1.0
+  max_duration: 12.0
+  train_hours: 5.0
+  val_hours: 1.0
+  seed: 1234
+
+audio:
+  sampling_rate: 22050     # Svarah is resampled up to match the HiFi-GAN vocoder
+  n_fft: 1024
+  hop_length: 256
+  win_length: 1024
+  n_mels: 80
+  mel_fmin: 0
+  mel_fmax: 8000
+  f0_min: 60
+  f0_max: 500
+
+model:
+  max_seq_len: 1000
+  encoder_layers: 4
+  encoder_hidden: 256
+  encoder_heads: 2
+  decoder_layers: 6
+  decoder_hidden: 256
+  decoder_heads: 2
+  conv_filter_size: 1024
+  conv_kernel_size: [9, 1]
+  dropout: 0.2
+  variance_predictor:
+    filter_size: 256
+    kernel_size: 3
+    dropout: 0.5
+  n_bins: 256
+  postnet:
+    channels: 512
+    kernel_size: 5
+    layers: 5
+    dropout: 0.5
+
+train:
+  batch_size: 16
+  lr_scale: 1.0
+  warmup_steps: 4000
+  total_steps: 100000
+  grad_clip: 1.0
+  grad_acc_steps: 1
+  amp: true
+  num_workers: 2
+  log_step: 100
+  val_step: 1000
+  save_step: 5000
+  seed: 1234
+
+inference:
+  speaker: null            # null = the speaker with the most training audio
+  griffin_lim_iters: 60

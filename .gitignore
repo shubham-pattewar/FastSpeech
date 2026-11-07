@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# datasets, MFA output and extracted features
+data/
+
+# full training state (optimizer etc.); only best.pt is submitted
+English/checkpoints/last.pt
+Telugu/checkpoints/last.pt
+
+hifigan/*.pth.tar
+hifigan/*.zip
+output.wav

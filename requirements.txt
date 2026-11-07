@@ -1,0 +1,16 @@
+torch>=2.1
+numpy
+librosa>=0.10
+soundfile
+pyyaml
+tqdm
+matplotlib
+tgt              # reading MFA TextGrids
+g2p_en           # English G2P (CMUdict + homographs + neural fallback)
+inflect          # English number normalisation
+nltk
+pyarrow          # reading the IndicTTS Telugu parquet files
+pyworld          # F0 extraction; if it fails to install, librosa.pyin is used instead (slower)
+pytest
+
+# Montreal Forced Aligner is installed separately through conda, see README
