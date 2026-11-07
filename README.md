@@ -35,10 +35,10 @@ All commands below are run from the repository root.
 
 ## Running on a cloud GPU
 
-[run_on_gpu.ipynb](run_on_gpu.ipynb) runs every step below for one language on Kaggle or Colab
+[notebooks/english_gpu.ipynb](notebooks/english_gpu.ipynb) and [notebooks/telugu_gpu.ipynb](notebooks/telugu_gpu.ipynb) run every step below on Kaggle or Colab
 (download, MFA, features, training, inference) and packs the checkpoint, logs, plots and audio
 into `outputs_<Language>.zip`, which unzips straight into this repository. Instructions are in
-the first cell. Run it once per language.
+the first cell.
 
 ## English (Svarah)
 

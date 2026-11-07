@@ -205,7 +205,7 @@ Possible improvements:
 - Code: this repository. Dependencies: `requirements.txt` (PyTorch, librosa, g2p_en, tgt,
   pyworld, pyarrow, ...). Montreal Forced Aligner 3.x is installed through conda-forge.
 - Configs: `English/config.yaml`, `Telugu/config.yaml`.
-- One-click run on Kaggle/Colab: `run_on_gpu.ipynb` (set `LANGUAGE`).
+- One-click run on Kaggle/Colab: `notebooks/english_gpu.ipynb`, `notebooks/telugu_gpu.ipynb`.
 - Manual commands: see `README.md` (extract → select → MFA → features → train → inference).
 - Seeds: data selection 1234, training 1234.
 - Checkpoints: `English/checkpoints/best.pt`, `Telugu/checkpoints/best.pt` (Git LFS). Each
