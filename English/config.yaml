@@ -1,7 +1,8 @@
 language: english
 
 path:
-  raw_dir: data/English/Svarah            # svarah_manifest.json + audio/
+  parquet_dir: data/English/Svarah_hf      # huggingface-cli download ai4bharat/Svarah (gated)
+  raw_dir: data/English/raw                # written by `preprocess.py extract`
   corpus_dir: data/English/mfa_corpus
   lexicon: data/English/lexicon.txt
   textgrid_dir: data/English/TextGrid
@@ -12,12 +13,13 @@ path:
 
 dataset:
   name: Svarah
-  manifest: svarah_manifest.json
-  # The manifest has no speaker field; the speaker is taken from the file name.
-  # Check this against your copy (preprocess prints the number of speakers found, should be ~117).
-  speaker_regex: "^(.+?)_"
+  # Svarah has no speaker id column. If one is not found, utterances are grouped by
+  # the speaker metadata (gender, age group, L1, district, ...), which is constant per
+  # speaker. `extract` prints how many speakers it found (the corpus has 117).
+  # Set a regex here to take the speaker from the audio file name instead.
+  speaker_regex: null
   min_duration: 1.0
-  max_duration: 12.0
+  max_duration: 20.0
   train_hours: 5.0
   val_hours: 1.0
   seed: 1234

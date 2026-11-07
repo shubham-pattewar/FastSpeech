@@ -33,13 +33,22 @@ unzip it into `hifigan/`. Without it, inference falls back to Griffin-Lim.
 
 All commands below are run from the repository root.
 
+## Running on a cloud GPU
+
+[run_on_gpu.ipynb](run_on_gpu.ipynb) runs every step below for one language on Kaggle or Colab
+(download, MFA, features, training, inference) and packs the checkpoint, logs, plots and audio
+into `outputs_<Language>.zip`, which unzips straight into this repository. Instructions are in
+the first cell. Run it once per language.
+
 ## English (Svarah)
 
 Svarah: 9.6 h of Indian-accented English from 117 speakers
-([AI4Bharat/Svarah](https://github.com/AI4Bharat/Svarah)). Extract it to `data/English/Svarah`
-so that `svarah_manifest.json` and `audio/` are directly inside.
+([AI4Bharat/Svarah](https://github.com/AI4Bharat/Svarah)). The HuggingFace copy is gated: accept
+the terms on the dataset page and log in with `huggingface-cli login` first.
 
 ```bash
+huggingface-cli download ai4bharat/Svarah --repo-type dataset --local-dir data/English/Svarah_hf
+python English/preprocess.py extract
 python English/preprocess.py select
 conda run -n mfa mfa model download acoustic english_us_arpa
 conda run -n mfa mfa align data/English/mfa_corpus data/English/lexicon.txt english_us_arpa data/English/TextGrid --clean -j 4
@@ -77,16 +86,19 @@ python Telugu/inference.py --text "నమస్కారం, మీరు ఎల
 
 Both languages use the same procedure (`fastspeech2/preprocessing.py`):
 
-1. Keep utterances between `min_duration` and `max_duration` seconds (1 to 12 s English,
-   1 to 15 s Telugu) that have non-empty text after normalisation.
+1. Keep utterances between `min_duration` and `max_duration` seconds (1 to 20 s) that have
+   non-empty text after normalisation. IndicTTS contains some paragraph-length recordings
+   (up to 150 s) that are dropped by this filter.
 2. Group utterances by their normalised sentence, shuffle the groups with a fixed seed,
    and fill validation up to 1 h first, then training up to 5 h. Because whole groups are
    assigned, no utterance and no sentence appears in both splits.
 3. The selected ids and splits are written to `data/<lang>/preprocessed/selection.tsv`.
 
 For Telugu, the female speaker alone has only ~4.3 h, so both speakers are pooled and the model
-gets a speaker embedding (inference uses the female voice by default). For Svarah, the manifest
-has no speaker field, so the speaker is parsed from the file name (`speaker_regex` in the config).
+gets a speaker embedding (inference uses the female voice by default). Svarah has no speaker id
+column, so utterances are grouped by their speaker metadata (gender, age group, first language,
+native district, education, job), which is constant for a speaker; `extract` prints how many
+speakers this yields. A file-name regex can be used instead (`speaker_regex` in the config).
 
 ## Changes compared to ming024/FastSpeech2
 
@@ -99,6 +111,9 @@ Shared:
   is applied in the unnormalised domain.
 - Speaker embedding is optional and switched on automatically when there is more than one speaker.
 - Mixed precision training, a CSV loss log, and loss plots updated at every validation step.
+- `--max_hours` stops training cleanly on a time-limited GPU session and still evaluates and
+  saves the final weights.
+- Both datasets are read directly from their HuggingFace parquet files.
 
 English:
 - Text normalisation for times (`10:45 AM` -> "ten forty five A M"), dates

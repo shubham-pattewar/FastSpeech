@@ -73,6 +73,36 @@ def test_english_frontend():
     assert noun != verb
 
 
+def test_extract_parquet(tmp_path):
+    import io
+    import json
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from fastspeech2.hf_parquet import extract_parquet, load_manifest
+
+    sys.path.insert(0, str(ROOT / "Telugu"))
+    from preprocess import gender_speaker
+
+    rows = []
+    for i in range(3):
+        buf = io.BytesIO()
+        sf.write(buf, np.zeros(48000, dtype=np.float32), 48000, format="WAV")
+        rows.append({"audio": {"bytes": buf.getvalue(), "path": f"x{i}.wav"}, "text": "పులి", "gender": i % 2})
+    table = pa.Table.from_pylist(rows)
+    features = {"gender": {"names": ["female", "male"], "_type": "ClassLabel"}}
+    table = table.replace_schema_metadata({"huggingface": json.dumps({"info": {"features": features}})})
+    (tmp_path / "pq").mkdir()
+    pq.write_table(table, tmp_path / "pq" / "train-0.parquet")
+
+    counts = extract_parquet(tmp_path / "pq", tmp_path / "raw", 22050, gender_speaker, "tel")
+    assert counts == {"female": 2, "male": 1}
+    utts = load_manifest(tmp_path / "raw", ["female"])
+    assert len(utts) == 2 and abs(utts[0]["duration"] - 1.0) < 1e-3
+    assert sf.info(utts[0]["path"]).samplerate == 22050
+
+
 def test_model_forward_backward(tmp_path):
     cfg = tiny_config(tmp_path)
     stats = {"pitch": {"min": -2, "max": 2, "mean": 150, "std": 30},

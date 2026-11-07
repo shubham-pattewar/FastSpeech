@@ -57,8 +57,11 @@ def evaluate(model, loader, criterion, device, use_amp):
     return {k: v / n for k, v in sums.items()}
 
 
-def train(cfg, resume=None, device=None):
+def train(cfg, resume=None, device=None, max_hours=None):
+    """max_hours: stop cleanly (saving last.pt) once this much wall time has passed,
+    so a run on a time-limited cloud GPU always ends with usable checkpoints."""
     p, t = cfg["path"], cfg["train"]
+    deadline = time.time() + max_hours * 3600 if max_hours else None
     device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     use_amp = bool(t.get("amp")) and device.type == "cuda"
     torch.manual_seed(t["seed"])
@@ -123,7 +126,8 @@ def train(cfg, resume=None, device=None):
     model.train()
     optimizer.zero_grad(set_to_none=True)
 
-    while step < t["total_steps"]:
+    out_of_time = False
+    while step < t["total_steps"] and not out_of_time:
         for batch in train_loader:
             batch = to_device(batch, device)
             with torch.autocast(device.type, enabled=use_amp):
@@ -168,7 +172,18 @@ def train(cfg, resume=None, device=None):
 
             if step >= t["total_steps"]:
                 break
+            if deadline and time.time() > deadline:
+                print(f"time budget of {max_hours} h used up at step {step}")
+                out_of_time = True
+                break
 
+    if out_of_time or step % t["val_step"]:
+        # make sure best.pt reflects the final weights too
+        val = evaluate(model, val_loader, criterion, device, use_amp)
+        val_log.write({"step": step, **val})
+        if val["total"] < best_val:
+            best_val = val["total"]
+            save(os.path.join(p["checkpoint_dir"], "best.pt"), val["total"])
     save(os.path.join(p["checkpoint_dir"], "last.pt"), full=True)
     plot_losses(p["checkpoint_dir"], p["results_dir"])
     print(f"done, best val loss {best_val:.4f}")
